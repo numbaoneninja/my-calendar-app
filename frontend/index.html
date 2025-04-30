@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calendar Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="calendar">
+        <div class="calendar-header">
+            <button id="prev-month">←</button>
+            <h1 id="current-month"></h1>
+            <button id="next-month">→</button>
+        </div>
+        <div class="weekdays">
+            <div>Sun</div><div>Mon</div><div>Tue</div>
+            <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        <div class="days" id="calendar-days"></div>
+    </div>
+
+    <div class="event-controls">
+        <input type="date" id="event-date">
+        <input type="text" id="event-text" placeholder="Event description">
+        <button id="add-event">Add Event</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
