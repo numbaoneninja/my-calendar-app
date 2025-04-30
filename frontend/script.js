@@ -1,7 +1,7 @@
 // =====================
 // Calendar Core Logic
 // =====================
-const API_BASE = "http://localhost:5000";  // PC-only development
+const API_BASE = "https://my-calendar-app-1.onrender.com";    // PC-only development
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
 
