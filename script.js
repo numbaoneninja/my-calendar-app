@@ -303,6 +303,10 @@ async function showEventPopup(dateKey) {
     </div>
   `;
 
+  // Add these listeners
+  overlay.addEventListener("click", removePopup);
+  popup.addEventListener("click", (e) => e.stopPropagation()); // Prevent clicks inside popup from closing it
+
   // Add edit functionality
   popup.querySelectorAll(".event-text").forEach((textElement, index) => {
     textElement.addEventListener("click", () => {
@@ -347,8 +351,7 @@ async function handleDelete(dateKey, eventId) {
     const success = await deleteEvent(dateKey, eventId);
     if (success) {
       await refreshCalendar();
-      removePopup(); // Close the popup
-      showEventPopup(dateKey); // Re-open with updated events
+      removePopup(); // Only close - don't reopen
     }
   }
 }
