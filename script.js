@@ -111,7 +111,14 @@ function createDayElement(day, dateKey) {
   const div = document.createElement("div");
   if (day) {
     div.textContent = day;
-    div.addEventListener("click", () => showEventPopup(dateKey));
+
+    // Modified click handler
+    div.addEventListener("click", (e) => {
+      if (!e.target.closest(".delete-event-btn")) {
+        // Don't open popup if deleting
+        showEventPopup(dateKey);
+      }
+    });
   }
   return div;
 }
@@ -124,9 +131,12 @@ function createEventElement(event, dateKey) {
   deleteBtn.className = "delete-event-btn";
   deleteBtn.textContent = "×";
 
-  deleteBtn.addEventListener("click", (e) => {
-    e.stopPropagation(); // Critical fix
-    handleDelete(dateKey, event.id);
+  deleteBtn.addEventListener("click", async (e) => {
+    e.stopPropagation(); // Still needed for other interactions
+    if (confirm("Delete this event?")) {
+      await deleteEvent(dateKey, event.id);
+      await refreshCalendar();
+    }
   });
 
   eventDiv.innerHTML = `<span>${event.text}</span>`;
