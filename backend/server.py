@@ -106,7 +106,7 @@ def get_all_events():
     return jsonify(load_events())
 
 
-@app.route("/api/events/<date>/<event_id>", methods=["DELETE"])
+@app.route("/api/events/<date>/<event_id>", methods=["DELETE"], endpoint='delete_event_route')
 def delete_event(date, event_id):
     try:
         events = load_events()
