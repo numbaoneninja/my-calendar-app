@@ -125,16 +125,25 @@ function createDayElement(day, dateKey) {
 function createEventElement(event, dateKey) {
   const eventDiv = document.createElement("div");
   eventDiv.className = "calendar-event";
+  eventDiv.dataset.dateKey = dateKey; // Store date key
 
   const deleteBtn = document.createElement("button");
   deleteBtn.className = "delete-event-btn";
   deleteBtn.textContent = "×";
 
+  // Delete button handler
   deleteBtn.addEventListener("click", async (e) => {
-    e.stopPropagation(); // Still needed for other interactions
+    e.stopPropagation();
     if (confirm("Delete this event?")) {
       await deleteEvent(dateKey, event.id);
       await refreshCalendar();
+    }
+  });
+
+  // Event click handler (for opening popup)
+  eventDiv.addEventListener("click", (e) => {
+    if (e.target !== deleteBtn) {
+      showEventPopup(dateKey);
     }
   });
 

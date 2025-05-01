@@ -78,6 +78,9 @@ body {
   align-items: center;
   cursor: pointer;
   transition: background 0.2s;
+  position: relative;
+  z-index: 2; /* Ensure events are above the click layer */
+  pointer-events: auto;
 }
 
 .calendar-event:hover {
@@ -342,6 +345,7 @@ body {
   right: 0;
   bottom: 0;
   z-index: 1; /* Make empty space clickable */
+  pointer-events: none;
 }
 
 .days div > * {
