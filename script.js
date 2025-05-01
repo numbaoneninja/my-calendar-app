@@ -12,309 +12,363 @@ let allEvents = [];
 // Initialization
 // =====================
 document.addEventListener("DOMContentLoaded", () => {
-    initEventListeners();
-    generateCalendar(currentYear, currentMonth);
+  initEventListeners();
+  generateCalendar(currentYear, currentMonth);
 });
 
 function initEventListeners() {
-    // Month Navigation
-    document.getElementById("prev-month").addEventListener("click", () => {
-        currentMonth--;
-        if (currentMonth < 0) {
-            currentMonth = 11;
-            currentYear--;
-        }
-        refreshCalendar();
-    });
+  // Month Navigation
+  document.getElementById("prev-month").addEventListener("click", () => {
+    currentMonth--;
+    if (currentMonth < 0) {
+      currentMonth = 11;
+      currentYear--;
+    }
+    refreshCalendar();
+  });
 
-    document.getElementById("next-month").addEventListener("click", () => {
-        currentMonth++;
-        if (currentMonth > 11) {
-            currentMonth = 0;
-            currentYear++;
-        }
-        refreshCalendar();
-    });
+  document.getElementById("next-month").addEventListener("click", () => {
+    currentMonth++;
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+    refreshCalendar();
+  });
 
-    // Add Event Button
-    document.getElementById("add-event").addEventListener("click", async () => {
-        const date = document.getElementById("event-date").value;
-        const text = document.getElementById("event-text").value.trim();
-        
-        if (!date || !text) {
-            alert("Please fill both fields!");
-            return;
-        }
+  // Add Event Button
+  document.getElementById("add-event").addEventListener("click", async () => {
+    const date = document.getElementById("event-date").value;
+    const text = document.getElementById("event-text").value.trim();
 
-        try {
-            await saveEvent(date, text);
-            document.getElementById("event-text").value = "";
-            if (date.startsWith(`${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`)) {
-                await refreshCalendar();
-            }
-        } catch (error) {
-            console.error("Add event error:", error);
-        }
-    });
+    if (!date || !text) {
+      alert("Please fill both fields!");
+      return;
+    }
 
-    // Events Panel
-    document.querySelector(".toggle-panel").addEventListener("click", toggleEventPanel);
-    document.getElementById("search-events").addEventListener("input", handleSearch);
+    try {
+      await saveEvent(date, text);
+      document.getElementById("event-text").value = "";
+      if (
+        date.startsWith(
+          `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}`
+        )
+      ) {
+        await refreshCalendar();
+      }
+    } catch (error) {
+      console.error("Add event error:", error);
+    }
+  });
+
+  // Events Panel
+  document
+    .querySelector(".toggle-panel")
+    .addEventListener("click", toggleEventPanel);
+  document
+    .getElementById("search-events")
+    .addEventListener("input", handleSearch);
 }
 
 // =====================
 // Calendar Core
 // =====================
 async function generateCalendar(year, month) {
-    const daysContainer = document.getElementById("calendar-days");
-    daysContainer.innerHTML = "";
-    
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const events = await loadEvents();
+  const daysContainer = document.getElementById("calendar-days");
+  daysContainer.innerHTML = "";
 
-    // Empty day placeholders
-    for (let i = 0; i < firstDay; i++) {
-        daysContainer.appendChild(createDayElement(""));
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const events = await loadEvents();
+
+  // Empty day placeholders
+  for (let i = 0; i < firstDay; i++) {
+    daysContainer.appendChild(createDayElement(""));
+  }
+
+  // Create days
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateKey = formatDateKey(year, month, day);
+    const dayElement = createDayElement(day, dateKey);
+
+    if (isToday(year, month, day)) {
+      dayElement.classList.add("today");
     }
 
-    // Create days
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dateKey = formatDateKey(year, month, day);
-        const dayElement = createDayElement(day, dateKey);
-        
-        if (isToday(year, month, day)) {
-            dayElement.classList.add("today");
-        }
-
-        if (events[dateKey]) {
-            events[dateKey].forEach(event => {
-                dayElement.appendChild(createEventElement(event, dateKey));
-            });
-        }
-        
-        daysContainer.appendChild(dayElement);
+    if (events[dateKey]) {
+      events[dateKey].forEach((event) => {
+        dayElement.appendChild(createEventElement(event, dateKey));
+      });
     }
 
-    updateCalendarTitle();
+    daysContainer.appendChild(dayElement);
+  }
+
+  updateCalendarTitle();
 }
 
 function createDayElement(day, dateKey) {
-    const div = document.createElement("div");
-    if (day) {
-        div.textContent = day;
-        div.addEventListener("click", () => showEventPopup(dateKey));
-    }
-    return div;
+  const div = document.createElement("div");
+  if (day) {
+    div.textContent = day;
+    div.addEventListener("click", () => showEventPopup(dateKey));
+  }
+  return div;
 }
 
 function createEventElement(event, dateKey) {
-    const eventDiv = document.createElement("div");
-    eventDiv.className = "calendar-event";
-    eventDiv.innerHTML = `
+  const eventDiv = document.createElement("div");
+  eventDiv.className = "calendar-event";
+  eventDiv.innerHTML = `
         <span>${event.text}</span>
         <button class="delete-event-btn" onclick="handleDelete('${dateKey}', '${event.id}')">×</button>
     `;
-    return eventDiv;
+  return eventDiv;
 }
 
 // =====================
 // Event Management
 // =====================
 async function loadEvents() {
-    try {
-        const response = await fetch(`${API_BASE}/api/events`);
-        return await response.json();
-    } catch (error) {
-        console.error("Load Error:", error);
-        return {};
-    }
+  try {
+    const response = await fetch(`${API_BASE}/api/events`);
+    return await response.json();
+  } catch (error) {
+    console.error("Load Error:", error);
+    return {};
+  }
 }
 
 async function saveEvent(date, text) {
-    try {
-        const response = await fetch(`${API_BASE}/api/events`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ date, event: text })
-        });
-        
-        if (!response.ok) throw new Error("Failed to save event");
-        return true;
-    } catch (error) {
-        alert(error.message);
-        return false;
-    }
+  try {
+    const response = await fetch(`${API_BASE}/api/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date, event: text }),
+    });
+
+    if (!response.ok) throw new Error("Failed to save event");
+    return true;
+  } catch (error) {
+    alert(error.message);
+    return false;
+  }
 }
 
 async function deleteEvent(date, eventId) {
-    try {
-        const response = await fetch(`${API_BASE}/api/events/${date}/${eventId}`, {
-            method: "DELETE"
-        });
-        
-        if (!response.ok) throw new Error("Failed to delete event");
-        return true;
-    } catch (error) {
-        alert(error.message);
-        return false;
+  try {
+    const response = await fetch(
+      `${API_BASE}/api/events/${encodeURIComponent(date)}/${encodeURIComponent(
+        eventId
+      )}`,
+      {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    if (!response.ok) throw new Error("Failed to delete event");
+    return true;
+  } catch (error) {
+    alert(error.message);
+    return false;
+  }
+}
+
+async function updateEvent(date, eventId, newText) {
+  try {
+    await deleteEvent(date, eventId);
+    const success = await saveEvent(date, newText);
+
+    if (success) {
+      await refreshCalendar();
+      removePopup();
     }
+  } catch (error) {
+    alert("Error updating event: " + error.message);
+  }
 }
 
 // =====================
 // Events Panel & Search
 // =====================
 async function toggleEventPanel() {
-    const panel = document.querySelector(".events-panel");
-    panel.classList.toggle("active");
+  const panel = document.querySelector(".events-panel");
+  panel.classList.toggle("active");
 
-    if (panel.classList.contains("active")) {
-        const response = await fetch(`${API_BASE}/api/events/all`);
-        const eventsData = await response.json();
-        
-        allEvents = [];
-        for (const date in eventsData) {
-            eventsData[date].forEach(event => {
-                allEvents.push({ date, ...event });
-            });
-        }
+  if (panel.classList.contains("active")) {
+    const response = await fetch(`${API_BASE}/api/events/all`);
+    const eventsData = await response.json();
 
-        fuse = new Fuse(allEvents, {
-            keys: ['text', 'date'],
-            threshold: 0.3
-        });
-
-        updateSearchResults(allEvents);
+    allEvents = [];
+    for (const date in eventsData) {
+      eventsData[date].forEach((event) => {
+        allEvents.push({ date, ...event });
+      });
     }
+
+    fuse = new Fuse(allEvents, {
+      keys: ["text", "date"],
+      threshold: 0.3,
+    });
+
+    updateSearchResults(allEvents);
+  }
 }
 
 function handleSearch(e) {
-    if (!fuse) return;
-    
-    const results = e.target.value.trim() === '' 
-        ? allEvents 
-        : fuse.search(e.target.value).map(r => r.item);
-    
-    updateSearchResults(results);
+  if (!fuse) return;
+
+  const results =
+    e.target.value.trim() === ""
+      ? allEvents
+      : fuse.search(e.target.value).map((r) => r.item);
+
+  updateSearchResults(results);
 }
 
 function updateSearchResults(events) {
-    const container = document.getElementById("search-results");
-    container.innerHTML = events.map(event => `
+  const container = document.getElementById("search-results");
+  container.innerHTML = events
+    .map(
+      (event) => `
         <div class="search-result-item" data-date="${event.date}">
             <strong>${event.date}</strong><br>
             ${event.text}
         </div>
-    `).join("");
+    `
+    )
+    .join("");
 
-    // Add click handlers to search results
-    container.querySelectorAll(".search-result-item").forEach(item => {
-        item.addEventListener("click", () => {
-            const [year, month] = item.dataset.date.split("-");
-            currentYear = parseInt(year);
-            currentMonth = parseInt(month) - 1;
-            refreshCalendar();
-            document.querySelector(".events-panel").classList.remove("active");
-        });
+  // Add click handlers to search results
+  container.querySelectorAll(".search-result-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      const [year, month] = item.dataset.date.split("-");
+      currentYear = parseInt(year);
+      currentMonth = parseInt(month) - 1;
+      refreshCalendar();
+      document.querySelector(".events-panel").classList.remove("active");
     });
+  });
 }
 
 // =====================
 // Event Popup
 // =====================
 async function showEventPopup(dateKey) {
-    removePopup();
+  removePopup();
 
-    const events = await loadEvents();
-    const dateEvents = events[dateKey] || [];
+  const events = await loadEvents();
+  const dateEvents = events[dateKey] || [];
 
-    const popup = document.createElement("div");
-    popup.className = "event-popup";
-    popup.innerHTML = `
-        <h3>${dateKey}</h3>
-        <div class="existing-events">
-            ${dateEvents.map(event => `
-                <div class="event-item">
-                    ${event.text}
-                    <button onclick="handleDelete('${dateKey}', '${event.id}')">Delete</button>
-                </div>
-            `).join('')}
+  const popup = document.createElement("div");
+  popup.className = "event-popup";
+  popup.innerHTML = `
+    <h3>${dateKey}</h3>
+    <div class="existing-events">
+      ${dateEvents
+        .map(
+          (event) => `
+        <div class="event-item">
+          <span class="event-text">${event.text}</span>
+          <button onclick="handleDelete('${dateKey}', '${event.id}')">Delete</button>
         </div>
-        <input type="text" id="event-input" placeholder="New event description...">
-        <div class="popup-buttons">
-            <button onclick="handleAdd('${dateKey}')">Add Event</button>
-            <button onclick="removePopup()">Close</button>
-        </div>
-    `;
+      `
+        )
+        .join("")}
+    </div>
+    <input type="text" id="event-input" placeholder="New event description...">
+    <div class="popup-buttons">
+      <button onclick="handleAdd('${dateKey}')">Add Event</button>
+      <button onclick="removePopup()">Close</button>
+    </div>
+  `;
 
-    const overlay = document.createElement("div");
-    overlay.className = "popup-overlay";
-    
-    document.body.appendChild(overlay);
-    document.body.appendChild(popup);
-    currentPopup = { popup, overlay };
-
-    // Keyboard shortcuts
-    document.getElementById("event-input").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") handleAdd(dateKey);
-        if (e.key === "Escape") removePopup();
+  // Add edit functionality
+  popup.querySelectorAll(".event-text").forEach((textElement, index) => {
+    textElement.addEventListener("click", () => {
+      const newText = prompt("Edit event:", dateEvents[index].text);
+      if (newText !== null && newText.trim() !== "") {
+        updateEvent(dateKey, dateEvents[index].id, newText.trim());
+      }
     });
-    
-    document.getElementById("event-input").focus();
+  });
+
+  const overlay = document.createElement("div");
+  overlay.className = "popup-overlay";
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(popup);
+  currentPopup = { popup, overlay };
+
+  // Keyboard shortcuts
+  document.getElementById("event-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleAdd(dateKey);
+    if (e.key === "Escape") removePopup();
+  });
+
+  document.getElementById("event-input").focus();
 }
 
 async function handleAdd(dateKey) {
-    const input = document.getElementById("event-input");
-    const text = input.value.trim();
+  const input = document.getElementById("event-input");
+  const text = input.value.trim();
 
-    if (text) {
-        const success = await saveEvent(dateKey, text);
-        if (success) {
-            await refreshCalendar();
-            removePopup();
-        }
+  if (text) {
+    const success = await saveEvent(dateKey, text);
+    if (success) {
+      await refreshCalendar();
+      removePopup();
     }
+  }
 }
 
 async function handleDelete(dateKey, eventId) {
-    if (confirm("Are you sure you want to delete this event?")) {
-        const success = await deleteEvent(dateKey, eventId);
-        if (success) await refreshCalendar();
-    }
+  if (confirm("Are you sure you want to delete this event?")) {
+    const success = await deleteEvent(dateKey, eventId);
+    if (success) await refreshCalendar();
+  }
 }
 
 function removePopup() {
-    if (currentPopup) {
-        currentPopup.popup.remove();
-        currentPopup.overlay.remove();
-        currentPopup = null;
-    }
+  if (currentPopup) {
+    currentPopup.popup.remove();
+    currentPopup.overlay.remove();
+    currentPopup = null;
+  }
 }
 
 // =====================
 // Utilities
 // =====================
 function formatDateKey(year, month, day) {
-    return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(
+    2,
+    "0"
+  )}`;
 }
 
 function isToday(year, month, day) {
-    const today = new Date();
-    return (
-        year === today.getFullYear() &&
-        month === today.getMonth() &&
-        day === today.getDate()
-    );
+  const today = new Date();
+  return (
+    year === today.getFullYear() &&
+    month === today.getMonth() &&
+    day === today.getDate()
+  );
 }
 
 async function refreshCalendar() {
-    await generateCalendar(currentYear, currentMonth);
+  await generateCalendar(currentYear, currentMonth);
 }
 
 function updateCalendarTitle() {
-    const monthName = new Date(currentYear, currentMonth).toLocaleString('default', { 
-        month: 'long' 
-    });
-    document.getElementById("current-month").textContent = 
-        `${monthName} ${currentYear}`;
+  const monthName = new Date(currentYear, currentMonth).toLocaleString(
+    "default",
+    {
+      month: "long",
+    }
+  );
+  document.getElementById(
+    "current-month"
+  ).textContent = `${monthName} ${currentYear}`;
 }

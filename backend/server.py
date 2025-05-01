@@ -3,6 +3,7 @@ from flask_cors import CORS
 import os
 import json
 import uuid
+import re
 from datetime import datetime
 
 app = Flask(__name__)
@@ -103,6 +104,34 @@ def delete_event(date, event_id):
 @app.route("/api/events/all")
 def get_all_events():
     return jsonify(load_events())
+
+
+@app.route("/api/events/<date>/<event_id>", methods=["DELETE"])
+def delete_event(date, event_id):
+    try:
+        events = load_events()
+
+        # Validate date format
+        if not re.match(r"\d{4}-\d{2}-\d{2}", date):
+            return jsonify({"error": "Invalid date format"}), 400
+
+        if date in events:
+            original_count = len(events[date])
+            events[date] = [e for e in events[date] if e['id'] != event_id]
+
+            if len(events[date]) == original_count:
+                return jsonify({"error": "Event not found"}), 404
+
+            if not events[date]:
+                del events[date]
+
+            save_events(events)
+            return jsonify({"status": "success"})
+
+        return jsonify({"error": "Date not found"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
