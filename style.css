@@ -327,3 +327,24 @@ body {
 .event-text:hover {
   color: #2196f3;
 }
+
+.days div {
+  cursor: pointer; /* Show click feedback */
+  position: relative;
+}
+
+/* Ensure day number is clickable */
+.days div::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1; /* Make empty space clickable */
+}
+
+.days div > * {
+  position: relative;
+  z-index: 2; /* Keep events above the click layer */
+}

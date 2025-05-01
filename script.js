@@ -106,16 +106,15 @@ async function generateCalendar(year, month) {
 
   updateCalendarTitle();
 }
-
 function createDayElement(day, dateKey) {
   const div = document.createElement("div");
   if (day) {
     div.textContent = day;
 
-    // Modified click handler
     div.addEventListener("click", (e) => {
-      if (!e.target.closest(".delete-event-btn")) {
-        // Don't open popup if deleting
+      // Only open popup if clicking the day number directly
+      if (e.target === div) {
+        // 👈 Key fix
         showEventPopup(dateKey);
       }
     });
@@ -304,7 +303,9 @@ async function showEventPopup(dateKey) {
   `;
 
   // Add these listeners
-  overlay.addEventListener("click", removePopup);
+  overlay.addEventListener("click", () => {
+    removePopup();
+  });
   popup.addEventListener("click", (e) => e.stopPropagation()); // Prevent clicks inside popup from closing it
 
   // Add edit functionality
