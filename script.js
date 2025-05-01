@@ -119,10 +119,19 @@ function createDayElement(day, dateKey) {
 function createEventElement(event, dateKey) {
   const eventDiv = document.createElement("div");
   eventDiv.className = "calendar-event";
-  eventDiv.innerHTML = `
-        <span>${event.text}</span>
-        <button class="delete-event-btn" onclick="handleDelete('${dateKey}', '${event.id}')">×</button>
-    `;
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.className = "delete-event-btn";
+  deleteBtn.textContent = "×";
+
+  deleteBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); // Critical fix
+    handleDelete(dateKey, event.id);
+  });
+
+  eventDiv.innerHTML = `<span>${event.text}</span>`;
+  eventDiv.appendChild(deleteBtn);
+
   return eventDiv;
 }
 
@@ -326,7 +335,11 @@ async function handleAdd(dateKey) {
 async function handleDelete(dateKey, eventId) {
   if (confirm("Are you sure you want to delete this event?")) {
     const success = await deleteEvent(dateKey, eventId);
-    if (success) await refreshCalendar();
+    if (success) {
+      await refreshCalendar();
+      removePopup(); // Close the popup
+      showEventPopup(dateKey); // Re-open with updated events
+    }
   }
 }
 
