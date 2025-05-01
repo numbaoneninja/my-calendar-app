@@ -273,11 +273,18 @@ function updateSearchResults(events) {
 // =====================
 // Event Popup
 // =====================
+// =====================
+// Event Popup (Fixed)
+// =====================
 async function showEventPopup(dateKey) {
   removePopup();
 
   const events = await loadEvents();
   const dateEvents = events[dateKey] || [];
+
+  // Create overlay first
+  const overlay = document.createElement("div");
+  overlay.className = "popup-overlay";
 
   const popup = document.createElement("div");
   popup.className = "event-popup";
@@ -289,7 +296,7 @@ async function showEventPopup(dateKey) {
           (event) => `
         <div class="event-item">
           <span class="event-text">${event.text}</span>
-          <button onclick="handleDelete('${dateKey}', '${event.id}')">Delete</button>
+          <button class="delete-btn">Delete</button>
         </div>
       `
         )
@@ -297,41 +304,49 @@ async function showEventPopup(dateKey) {
     </div>
     <input type="text" id="event-input" placeholder="New event description...">
     <div class="popup-buttons">
-      <button onclick="handleAdd('${dateKey}')">Add Event</button>
-      <button onclick="removePopup()">Close</button>
+      <button class="add-btn">Add Event</button>
+      <button class="close-btn">Close</button>
     </div>
   `;
 
-  // Add these listeners
-  overlay.addEventListener("click", () => {
-    removePopup();
-  });
-  popup.addEventListener("click", (e) => e.stopPropagation()); // Prevent clicks inside popup from closing it
+  // Event listeners for popup elements
+  popup
+    .querySelector(".add-btn")
+    .addEventListener("click", () => handleAdd(dateKey));
+  popup.querySelector(".close-btn").addEventListener("click", removePopup);
 
-  // Add edit functionality
+  // Delete buttons
+  popup.querySelectorAll(".delete-btn").forEach((btn, index) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      handleDelete(dateKey, dateEvents[index].id);
+    });
+  });
+
+  // Edit functionality
   popup.querySelectorAll(".event-text").forEach((textElement, index) => {
     textElement.addEventListener("click", () => {
       const newText = prompt("Edit event:", dateEvents[index].text);
-      if (newText !== null && newText.trim() !== "") {
+      if (newText?.trim()) {
         updateEvent(dateKey, dateEvents[index].id, newText.trim());
       }
     });
   });
 
-  const overlay = document.createElement("div");
-  overlay.className = "popup-overlay";
+  // Overlay click handler
+  overlay.addEventListener("click", removePopup);
 
   document.body.appendChild(overlay);
   document.body.appendChild(popup);
   currentPopup = { popup, overlay };
 
-  // Keyboard shortcuts
-  document.getElementById("event-input").addEventListener("keydown", (e) => {
+  // Keyboard handling
+  const input = popup.querySelector("#event-input");
+  input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") handleAdd(dateKey);
     if (e.key === "Escape") removePopup();
   });
-
-  document.getElementById("event-input").focus();
+  input.focus();
 }
 
 async function handleAdd(dateKey) {

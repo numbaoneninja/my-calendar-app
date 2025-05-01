@@ -81,32 +81,13 @@ def add_event():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/api/events/<date>/<event_id>", methods=["DELETE"])
-def delete_event(date, event_id):
-    try:
-        events = load_events()
-
-        if date in events:
-            # Remove the event with matching ID
-            events[date] = [e for e in events[date] if e['id'] != event_id]
-
-            # Remove date entry if no events left
-            if not events[date]:
-                del events[date]
-
-        save_events(events)
-        return jsonify({"status": "success"})
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
 @app.route("/api/events/all")
 def get_all_events():
     return jsonify(load_events())
 
 
-@app.route("/api/events/<date>/<event_id>", methods=["DELETE"], endpoint='delete_event_route')
+# Remove duplicate delete_event route and keep this one
+@app.route("/api/events/<date>/<event_id>", methods=["DELETE"])
 def delete_event(date, event_id):
     try:
         events = load_events()
