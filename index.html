@@ -19,11 +19,22 @@
     </div>
 
     <div class="event-controls">
-        <input type="date" id="event-date">
-        <input type="text" id="event-text" placeholder="Event description">
-        <button id="add-event">Add Event</button>
+        <div class="add-event-group">
+            <input type="date" id="event-date">
+            <input type="text" id="event-text" placeholder="Event description">
+            <button id="add-event">Add Event</button>
+        </div>
+        
+        <div class="events-panel">
+            <button class="toggle-panel">🔍 Show Events</button>
+            <div class="panel-content">
+                <input type="text" id="search-events" placeholder="Search events...">
+                <div id="search-results"></div>
+            </div>
+        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
     <script src="script.js"></script>
 </body>
 </html>

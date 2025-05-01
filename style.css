@@ -49,10 +49,13 @@ body {
 
 .days div {
     border: 1px solid #eee;
-    min-height: 80px;
+    min-height: 100px;
     padding: 5px;
     border-radius: 5px;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
 }
 
 .days div:hover {
@@ -68,19 +71,42 @@ body {
     background-color: #f0f0f0;
     border-radius: 3px;
     font-size: 12px;
-    padding: 2px 5px;
-    margin-top: 3px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.calendar-event:hover {
+    background: #e0e0e0;
+}
+
+.delete-event-btn {
+    background: none;
+    border: none;
+    color: #ff4444;
+    cursor: pointer;
+    padding: 0 5px;
 }
 
 .event-controls {
     display: flex;
-    gap: 10px;
+    gap: 20px;
+    justify-content: space-between;
+    align-items: flex-start;
     margin-top: 20px;
 }
 
-.event-controls input, .event-controls button {
+.add-event-group {
+    display: flex;
+    gap: 10px;
+    flex-grow: 1;
+}
+
+.event-controls input, 
+.event-controls button {
     padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 5px;
@@ -97,6 +123,67 @@ body {
     background: #45a049;
 }
 
+.events-panel {
+    position: relative;
+    width: 300px;
+}
+
+.toggle-panel {
+    padding: 8px 15px;
+    background: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.toggle-panel:hover {
+    background: #1976D2;
+}
+
+.panel-content {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 300px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 4px;
+    padding: 15px;
+    margin-top: 5px;
+    z-index: 1000;
+    display: none;
+}
+
+.events-panel.active .panel-content {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px) }
+    to { opacity: 1; transform: translateY(0) }
+}
+
+#search-results {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+
+.search-result-item {
+    padding: 8px;
+    margin: 5px 0;
+    background: #f8f8f8;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search-result-item:hover {
+    background: #e0e0e0;
+}
+
 .event-popup {
     position: fixed;
     top: 50%;
@@ -109,61 +196,14 @@ body {
     z-index: 1000;
     width: 90%;
     max-width: 400px;
+    animation: popupIn 0.3s ease;
 }
 
-.event-popup h3 {
-    margin-top: 0;
-    color: #333;
+@keyframes popupIn {
+    from { transform: translate(-50%, -50%) scale(0.9); opacity: 0 }
+    to { transform: translate(-50%, -50%) scale(1); opacity: 1 }
 }
 
-.event-popup input {
-    width: 100%;
-    padding: 8px;
-    margin: 10px 0;
-    box-sizing: border-box;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.popup-buttons {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-}
-
-.popup-buttons button {
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.popup-buttons button:last-child {
-    background: #f44336;
-    color: white;
-    border: none;
-}
-
-/* Popup Overlay */
-.popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: transparent;  /* 👈 No more gray */
-    z-index: 999;
-    cursor: pointer;
-}
-
-/* Close Button Styling */
-.close-btn {
-    background: #777 !important;
-    color: white !important;
-}
-
-.close-btn:hover {
-    background: #555 !important;
-}
 .popup-overlay {
     position: fixed;
     top: 0;
@@ -172,63 +212,83 @@ body {
     bottom: 0;
     background: rgba(0,0,0,0.5);
     z-index: 999;
-    cursor: pointer;
-}
-
-.event-popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    z-index: 1000;
-    width: 90%;
-    max-width: 400px;
 }
 
 .popup-buttons {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     justify-content: flex-end;
     margin-top: 15px;
 }
 
 .popup-buttons button {
-    padding: 6px 12px;
+    padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
     border: none;
+    transition: all 0.2s;
 }
 
-.delete-btn {
-    background: #f44336;
-    color: white;
-}
-
-.save-btn {
+.popup-buttons button:first-child {
     background: #4CAF50;
     color: white;
 }
 
-.close-btn {
-    background: #777;
+.popup-buttons button:first-child:hover {
+    background: #45a049;
+}
+
+.popup-buttons button:last-child {
+    background: #f44336;
     color: white;
 }
-/* Keyboard focus states */
-#edit-event-text:focus {
-    outline: 2px solid #1890ff;
-    border-color: #1890ff;
+
+.popup-buttons button:last-child:hover {
+    background: #d32f2f;
 }
 
-button:focus {
-    outline: 2px solid #1890ff;
-    transform: scale(1.05);
+.existing-events {
+    max-height: 200px;
+    overflow-y: auto;
+    margin: 15px 0;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 10px;
 }
 
-/* Slight animation for buttons */
-button {
-    transition: transform 0.1s ease;
+.event-item {
+    padding: 8px;
+    margin: 5px 0;
+    background: #f8f8f8;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.event-item button {
+    background: #ff4444;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.event-item button:hover {
+    background: #cc0000;
+}
+
+#event-input {
+    width: 94.5%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    margin: 10px 0;
+    transition: border-color 0.2s;
+}
+
+#event-input:focus {
+    outline: none;
+    border-color: #4CAF50;
 }
