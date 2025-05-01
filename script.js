@@ -1,7 +1,7 @@
 // =====================
 // Global Config
 // =====================
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://my-calendar-app-1.onrender.com";
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
 let currentPopup = null;
